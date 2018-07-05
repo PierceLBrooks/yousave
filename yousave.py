@@ -33,7 +33,7 @@ def	convert(path, base, name):
 		new = None
 	return new
 
-def save(index, base, video, title, extension):
+def save(audio, index, base, video, title, extension):
 	name = title
 	path = os.path.join(base, name+extension)
 	try:
@@ -49,13 +49,14 @@ def save(index, base, video, title, extension):
 			print("Save error @ "+path)
 			print(error)
 			path = None
-	if not (path == None):
-		print(title+" -> "+path)
-		if not (convert(path, base, name)):
-			path = None
+	if (audio):
+		if not (path == None):
+			print(title+" -> "+path)
+			if not (convert(path, base, name)):
+				path = None
 	return path
 
-def work(index, base, target):
+def work(audio, index, base, target):
 	temp = None
 	try:
 		remote = pytube.YouTube(target)
@@ -65,18 +66,18 @@ def work(index, base, target):
 		print(target+" -> "+title)
 		for video in videos:
 			tag = str(video)
-			if ("audio/mp4" in tag):
+			if ("video/mp4" in tag):
 				extension = True
 				break
 			else:
-				if ("audio/webm" in tag):
+				if ("video/webm" in tag):
 					extension = False
 					break
 		if not (extension == None):
 			if (extension):
-				temp = save(index, base, video, title, ".mp4")
+				temp = save(audio, index, base, video, title, ".mp4")
 			else:
-				temp = save(index, base, video, title, ".webm")
+				temp = save(audio, index, base, video, title, ".webm")
 		else:
 			print("No suitable format...")
 	except Exception as error:
@@ -84,14 +85,24 @@ def work(index, base, target):
 		print(error)
 	return temp
 
-def run(target):
+def run(target, mode):
 	success = True
 	try:
 		info = cwd()
 		base = info[0]
 		script = info[1]
-		print(base)
-		print(script)
+		audio = None
+		if (mode == "video"):
+			audio = False
+		else:
+			if (mode == "audio"):
+				audio = True
+		if (audio == None):
+			audio = True
+		if (audio):
+			print("Mode: audio")
+		else:
+			print("Mode: video")
 		path = os.path.join(base, target)
 		handle = open(path, "r")
 		lines = handle.readlines()
@@ -101,7 +112,7 @@ def run(target):
 		for line in lines:
 			temp = line.strip()
 			if (len(temp) > 0):
-				path = work(index, base, temp)
+				path = work(audio, index, base, temp)
 				if not (path == None):
 					paths.append(path)
 			index += 1
@@ -120,8 +131,8 @@ def run(target):
 
 if (__name__ == "__main__"):
 	args = sys.argv
-	if (len(args) == 2):
-		if (run(args[1])):
+	if (len(args) == 3):
+		if (run(args[1], args[2])):
 			sys.exit(0)
 		else:
 			sys.exit(-1)
